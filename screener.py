@@ -28,7 +28,9 @@ TOP_N = 250  # ile wynikow zapisac do JSON
 
 def get_sp500() -> list[str]:
     url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-    tables = pd.read_html(url)
+    r = requests.get(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}, timeout=30)
+    r.raise_for_status()
+    tables = pd.read_html(io.StringIO(r.text))
     syms = tables[0]["Symbol"].astype(str).str.strip().tolist()
     return syms
 
@@ -218,6 +220,8 @@ def main() -> None:
         },
         "results": results[:TOP_N],
     }
+    import os
+    os.makedirs("docs", exist_ok=True)
     with open("docs/results.json", "w") as f:
         json.dump(out, f, separators=(",", ":"))
     print(f"Zapisano {len(out['results'])} wynikow "
